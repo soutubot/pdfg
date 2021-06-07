@@ -13,31 +13,40 @@ import imagehash
 
 session = requests.session()
 
-#需要你修改的参数↓
+#-----↓需要你修改的参数↓-----
 bot = telebot.TeleBot("123456:xxxxxx") #TG BOT API
 bot_nanme = "@pdfg_bot" #bot名称暂时没什么卵用
 group_id = -123456 #群组白名单id
+admin_id = 654321 #admin白名单id
 Channel_url = 'https://t.me/xxx/' #频道链接
 dir_name = './download-telegram-channel-pictures/picture_storage_path/' #本地图库位置
-#需要你修改的参数↑
+#-----↑需要你修改的参数↑-----
 
+
+#判断消息是否为回复和图片
+def if_sousuo(message):
+    if message.reply_to_message is not None:  # 判断是否为回复
+        if message.reply_to_message.content_type == 'photo':  # 判断回复内容是否为图片
+            image_url = bot.get_file_url(message.reply_to_message.photo[-1].file_id)
+            bot.reply_to(message.reply_to_message, text="正在搜索中，请等待30秒", parse_mode="MarkdownV2")
+            sousuo(image_url, message.reply_to_message)
+        else:
+            bot.reply_to(message.reply_to_message, text="请使用指令回复一张图片，暂不支持GIF和视频")
+    else:
+        bot.reply_to(message, text="请使用指令回复一张图片，暂不支持GIF和视频")
+
+#pdfg指令
 @bot.message_handler(commands=['pdfg'])
 
 def send_pdfg(message):
     print(message)
     print(message.chat.id)
     if message.chat.type == 'supergroup' and message.chat.id == group_id: #判断是否本群
-        if message.reply_to_message is not None: #判断是否为回复
-            if message.reply_to_message.content_type == 'photo': #判断回复内容是否为图片
-                    image_url = bot.get_file_url(message.reply_to_message.photo[-1].file_id)
-                    bot.reply_to(message.reply_to_message, text="正在搜索中，请等待30秒", parse_mode="MarkdownV2")
-                    sousuo(image_url, message.reply_to_message)
-            else:
-                bot.reply_to(message.reply_to_message, text="请使用指令回复一张图片，暂不支持GIF和视频")
-        else:
-            bot.reply_to(message, text="请使用指令回复一张图片，暂不支持GIF和视频")
+        if_sousuo(message)
+    elif message.chat.type == 'private' and message.chat.id == admin_id:  #判断是否admin
+        if_sousuo(message)
     else:
-        print('非群聊&非本群')
+        print('非群聊&非本群&非admin')
 
 #---------------------
 
